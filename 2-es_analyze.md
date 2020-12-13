@@ -1,5 +1,5 @@
-
-
+# _analyze
+```
 POST _analyze 
 {
   "tokenizer": "standard",
@@ -18,9 +18,10 @@ POST _analyze
   "analyzer": "standard",
   "text": "I'm in the mood for drinking semi-dry red wine!"
 }
+```
 
 
-
+```
 PUT /existing_analyzer_config
 {
   "settings": {
@@ -55,12 +56,12 @@ POST /existing_analyzer_config/_analyze
   "filter": ["my_stemmer"], 
   "text": "I'm in the mood for drinking semi-dry red  wine!"
 }
-
+```
 
 #
 # Create Index with analyzer
 #
-
+```
 PUT /analyzers_test
 {
   "settings": {
@@ -99,12 +100,12 @@ POST /analyzers_test/_analyze
   "text": "I'm in the mood for drinking <strong>semi-dry</strong> red  wine!"
 }
 
-
+```
 
 #
 # use analyzer in mapping
 #
-
+```
 POST /analyzers_test/_mapping
 {
   "properties": {
@@ -158,13 +159,13 @@ GET  /analyzers_test/_search
     }
   }
 }
-
+```
 
 
 #
 # Add analyzer to existing index
 #
-
+```
 POST /analyzers_test/_close
 
 PUT /analyzers_test/_settings
@@ -182,12 +183,12 @@ PUT /analyzers_test/_settings
 }
 POST /analyzers_test/_open
 
-
+```
 
 #
 # synonyms
 #
-
+```
 DELETE  /synonyms
 
 PUT /synonyms
@@ -328,4 +329,4 @@ PUT /synonyms
     }
   }
 }
-
+```
