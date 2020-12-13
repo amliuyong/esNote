@@ -10,7 +10,7 @@ GET _cat/shards?v
 #
 # Create index
 #
-
+```
 DELETE /products
 
 PUT /products
@@ -21,11 +21,11 @@ PUT /products
   }
 }
 
-
+```
 #
 # Create Doc
 #
-
+```
 POST /products/_doc
 {
   "name": "Coffee Maker",
@@ -41,11 +41,11 @@ PUT /products/_doc/100
   "in_stock": 4
 }
 
-
+```
 #
 # Query
 #
-
+```
 GET /products/_doc/100
 
 
@@ -65,12 +65,12 @@ GET /product/_search
     }
   }
 }
-
+```
 
 #
 # Update Doc
 #
-
+```
 POST  /products/_update/100
 {
   "doc": {
@@ -172,32 +172,32 @@ POST  /products/_update/101
     "in_stock": 5
   }
 }
-
+```
 
 #
 # Replace Doc
 #
 
-
+```
 PUT  /products/_doc/100
 {
     "price" : 4900,
     "in_stock" : 50
 }
 
-
+```
 #
 # Delete Doc
 #
-
+```
 DELETE  /products/_doc/101
 
-
+```
 
 #
 # Versioning Update
 #
-
+```
 POST /products/_update/100?if_primary_term=1&if_seq_no=12
 {
   "doc": {
@@ -205,11 +205,11 @@ POST /products/_update/100?if_primary_term=1&if_seq_no=12
   }
 }
 
-
+```
 #
 # Update Multiple docments
 #
-
+```
 POST /products/_update_by_query
 {
   "conflicts": "proceed",
@@ -222,11 +222,11 @@ POST /products/_update_by_query
     }
   }
 }
-
+```
 #
 # Delete Multiple docments
 #
-
+```
 POST /products/_delete_by_query
 {
   "query": {
@@ -234,11 +234,11 @@ POST /products/_delete_by_query
   }
 }
 
-
+```
 #
 # _bulk request
 #
-
+```
 # Content-Type: application/x-ndjson
 
 
@@ -255,11 +255,11 @@ POST /products/_bulk
 { "doc": { "price": 129 }}
 {"delete": { "_id":200 } }
 
-
+```
 #
 # Import Data From File by Curl
 #
-
+```
 
 {"index":{"_id":1}}
 {"name":"Wine - Maipo Valle Cabernet","price":152,"in_stock":38,"sold":47,"tags":["Alcohol","Wine"],"description":"Aliquam augue quam, sollicitudin vitae, consectetuer eget, rutrum at, lorem. Integer tincidunt ante vel ipsum. Praesent blandit lacinia erat. Vestibulum sed magna at nunc commodo placerat. Praesent blandit. Nam nulla. Integer pede justo, lacinia eget, tincidunt eget, tempus vel, pede. Morbi porttitor lorem id ligula.","is_active":true,"created":"2004\/05\/13"}
@@ -273,11 +273,11 @@ http://localhost:9200/products/_bulk \
 --data-binary "@products-bulk.json"
 
 
-
+```
 #
 # Maping
 #
-
+```
 GET /products/_mapping
 
 # create index with mapping
@@ -364,7 +364,7 @@ PUT /product/_mapping
   }
 }
 
-
+```
 
 curl -H "Content-Type: application/x-ndjson" -XPOST \
 http://localhost:9200/product/_bulk \
