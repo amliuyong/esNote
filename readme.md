@@ -2569,3 +2569,74 @@ output:
       ]
 }
 ```
+# Logtash
+
+https://www.elastic.co/guide/en/logstash/current/index.html
+
+## input from stdin => elasticsearch
+
+```config
+input{
+    stdin{
+        codec => json
+    }
+}
+
+filter{
+    mutate {
+        rename => ["age", "person_age"]
+    }
+}
+
+output{
+    stdout{}
+    file{
+        path => "output.txt"
+    }
+    elasticsearch{
+        hosts => "localhost:9200"
+        index => "person"
+        document_type => "_doc"
+    }
+}
+```
+
+## input from file => elasticsearch
+
+```config
+input{
+   file{
+       path => [ "/Users/yongliu/Documents/software/elasticsearch7/logstash-7.10.1/input.txt" ]
+       start_position => "beginning"
+       sincedb_path => "/Users/yongliu/Documents/software/elasticsearch7/logstash-7.10.1/sincedb_file"
+       codec => json
+   }
+}
+
+filter{
+    mutate {
+        rename => ["age", "person_age"]
+    }
+}
+
+output{
+    stdout{}
+    file{
+        path => "output.txt"
+    }
+    elasticsearch{
+        hosts => "localhost:9200"
+        index => "person"
+        document_type => "_doc"
+    }
+}
+
+```
+## run logstash
+```
+./bin/logstash -f config/logstash_inputfromfile.conf
+
+./bin/logstash -e 'input{stdin{}} output{stdout{}}'
+
+```
+
