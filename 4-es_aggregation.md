@@ -1,8 +1,11 @@
-curl - H "Content-Type: application/x-ndjson" - XPOST\
-http: //localhost:9200/order/_bulk \
-    --data - binary "@orders-bulk.json"
+# laod test data from file
 
+```
+curl -H "Content-Type: application/x-ndjson" -XPOST http://localhost:9200/order/_bulk --data-binary "@orders-bulk.json"
 
+```
+
+```
 PUT /order/_mapping {
     "properties": {
         "status": {
@@ -12,8 +15,9 @@ PUT /order/_mapping {
     }
 }
 
-
-
+```
+## One doc 
+```json
 {
     "purchased_at": "2016-07-10T16:52:43Z",
     "lines": [{
@@ -40,11 +44,11 @@ PUT /order/_mapping {
     "sales_channel": "store",
     "status": "processed"
 }
+```
 
 
-
-#
-sum /avg /max /min
+## sum /avg /max /min
+```
 GET /order/_search {
     "size": 0,
     "aggs": {
@@ -70,9 +74,10 @@ GET /order/_search {
         }
     }
 }
+```
 
-
-# cardinality - distinct count()
+## cardinality - distinct count()
+```
 GET /order/_search {
     "size": 0,
     "aggs": {
@@ -83,10 +88,11 @@ GET /order/_search {
         }
     }
 }
+```
 
 
-
-# count
+## value count
+```
 GET /order/_search {
     "size": 0,
     "aggs": {
@@ -97,10 +103,11 @@ GET /order/_search {
         }
     }
 }
+```
 
 
-
-# stats
+## stats
+```
 GET /order/_search {
         "size": 0,
         "aggs": {
@@ -123,14 +130,17 @@ aggregations " : {
     "sum": 109209.60997009277
 }
 }
-
+```
 
 
 #
 # Bucket aggs
 #
 
-PUT /order/_mapping {
+### set status to fielddata 
+```
+PUT /order/_mapping 
+{
     "properties": {
         "status": {
             "type": "text",
@@ -138,9 +148,12 @@ PUT /order/_mapping {
         }
     }
 }
+```
+## group by status
 
-
-GET /order/_search {
+```
+GET /order/_search 
+{
         "size": 0,
         "aggs": {
             "status_terms": {
@@ -176,8 +189,10 @@ GET /order/_search {
             }
         ]
     }
+```
 
-
+### handle missing value
+```
 GET /order/_search
 {
   "size": 0,
@@ -195,8 +210,46 @@ GET /order/_search
   }
 }
 
+===>
+{
+"aggregations" : {
+    "status_terms" : {
+      "doc_count_error_upper_bound" : 0,
+      "sum_other_doc_count" : 0,
+      "buckets" : [
+        {
+          "key" : "N/A",
+          "doc_count" : 0
+        },
+        {
+          "key" : "cancelled",
+          "doc_count" : 196
+        },
+        {
+          "key" : "completed",
+          "doc_count" : 204
+        },
+        {
+          "key" : "confirmed",
+          "doc_count" : 192
+        },
+        {
+          "key" : "pending",
+          "doc_count" : 199
+        },
+        {
+          "key" : "processed",
+          "doc_count" : 209
+        }
+      ]
+    }
+  }
+}
 
-# sub aggs
+```
+
+## sub aggs
+```
 GET /order/_search
 {
   "size": 0,
@@ -234,9 +287,10 @@ GET /order/_search
         ....
 ]
 }
+```
 
-
-# combine query and aggs
+## combine query and aggs
+```
 GET /order/_search
 {
   "size": 0,
@@ -263,16 +317,18 @@ GET /order/_search
   }
 }
 
+```
 
-# combine filter and aggs
+## combine filter and aggs
 
+```
 GET /order/_search
 {
   "size": 0,
   "aggs": {
     "low_value": {
       "filter": {
-        "rage": {
+        "range": {
           "total_amount": {
             "lt": 50
           }
@@ -289,10 +345,23 @@ GET /order/_search
   }
 }
 
+===> 
+{
+  "aggregations" : {
+    "low_value" : {
+      "doc_count" : 164,
+      "avg_amount" : {
+        "value" : 32.59371952894257
+      }
+    }
+  }
+ } 
 
-# combine filters and aggs
+```
 
+## combine filters and aggs
 
+```
 GET /recipe/_search
 {
   "size": 0,
@@ -345,13 +414,13 @@ GET /recipe/_search
     }
   }
 }
-
+```
 
 #
-# rage aggs
+## range aggs
 #
 
-
+```
 GET /order/_search
 {
   "size": 0,
@@ -412,19 +481,19 @@ GET /order/_search
     }
   }
 }
+```
 
 
-
-# date_rage
-
+## date_range
+```
 GET /order/_search
 {
   "size": 0,
   "aggs": {
     "purchaed_rages": {
-      "date_rage": {
+      "date_range": {
         "field": "purchased_at",
-        "rages": [
+        "ranges": [
           {
             "from": "2016-01-01",
             "to": "2016-01-01||+6M"
@@ -464,19 +533,21 @@ GET /order/_search
     }
   }
 }
+```
 
-
+## give a name to data range
+```
 
 GET /order/_search
 {
   "size": 0,
   "aggs": {
-    "purchaed_rages": {
-      "date_rage": {
+    "purchaed_ranges": {
+      "date_range": {
         "field": "purchased_at",
         "format": "yyy-MM-dd",
         "keyed": true,
-        "rages": [
+        "ranges": [
           {
             "from": "2016-01-01",
             "to": "2016-01-01||+6M",
@@ -495,7 +566,7 @@ GET /order/_search
 ==> 
 {
     "aggregations" : {
-    "purchaed_rages" : {
+    "purchaed_ranges" : {
       "buckets" : {
         "first_half" : {
           "from" : 1.4516064E12,
@@ -515,12 +586,12 @@ GET /order/_search
     }
   }
 }
-
+```
 
 #
-# Histogram
+## Histogram - range
 #
-
+```
 GET /order/_search
 {
   "size": 0,
@@ -556,9 +627,9 @@ GET /order/_search
     }
   }
 }
+```
 
-
-
+```
 GET /order/_search
 {
   "size": 0,
@@ -583,8 +654,11 @@ GET /order/_search
     }
   }
 }
+```
 
-# date_histogram
+## date_histogram
+
+```
 GET /order/_search
 {
   "size": 0,
@@ -597,17 +671,18 @@ GET /order/_search
     }
   }
 }
-
+```
 
 #
 # global aggs, which ignore the query
 #
 
+```
 GET /order/_search
 {
   "size": 0,
   "query": {
-    "rage": {
+    "range": {
       "total_amount": {
         "gte": 100
       }
@@ -656,12 +731,12 @@ GET /order/_search
     }
   }
 }
-
+```
 
 #
-# missing aggs
+# missing value (null) -  aggs
 #
-
+```
 PUT /order/_doc/10001
 {
   "total_amount": 100
@@ -699,12 +774,12 @@ GET /order/_search
 
 DELETE /order/_doc/10001
 DELETE /order/_doc/10002
-
+```
 
 #
 # nested aggs for nested object
 #
-
+```
 PUT /department
 {
   "mappings": {
@@ -739,4 +814,4 @@ GET /department/_search
   }
 }
 
-
+```
