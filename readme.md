@@ -13,6 +13,14 @@ curl -i -XGET 'localhost:9200'
 http://localhost:5601/app/dev_tools#/console
 
 
+# Load data from file
+
+```
+curl -H "Content-Type: application/x-ndjson" -XPOST http://localhost:9200/order/_bulk --data-binary "@orders-bulk.json"
+
+```
+
+
 # Doc CRUD
 
 ## create/replace doc by PUT
