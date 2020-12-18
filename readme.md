@@ -16,7 +16,11 @@ http://localhost:5601/app/dev_tools#/console
 # Load data from file
 
 ```
+## localhost
 curl -H "Content-Type: application/x-ndjson" -XPOST http://localhost:9200/order/_bulk --data-binary "@orders-bulk.json"
+
+## cloud
+curl -H "Content-Type: application/x-ndjson" -XPOST -u elastic:your_password https://elastic-cloud-endpoint.com:9243/_bulk --data-binary "@orders.bulk.ndjson"
 
 ```
 
