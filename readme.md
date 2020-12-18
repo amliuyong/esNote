@@ -1429,6 +1429,112 @@ GET /blogposts/_search
 }
 ```
 
+## KQL `url.path:/ and user_agent.os.name : ("Windows"  or "Chorme")` 
+
+```json
+{
+  "version": true,
+  "size": 500,
+  "sort": [
+    {
+      "@timestamp": {
+        "order": "desc",
+        "unmapped_type": "boolean"
+      }
+    }
+  ],
+  "aggs": {
+    "2": {
+      "date_histogram": {
+        "field": "@timestamp",
+        "calendar_interval": "1d",
+        "time_zone": "Asia/Shanghai",
+        "min_doc_count": 1
+      }
+    }
+  },
+  "stored_fields": [
+    "*"
+  ],
+  "script_fields": {},
+  "docvalue_fields": [
+    {
+      "field": "@timestamp",
+      "format": "date_time"
+    }
+  ],
+  "_source": {
+    "excludes": []
+  },
+  "query": {
+    "bool": {
+      "must": [],
+      "filter": [
+        {
+          "bool": {
+            "should": [
+              {
+                "bool": {
+                  "should": [
+                    {
+                      "match_phrase": {
+                        "user_agent.os.name": "Windows"
+                      }
+                    }
+                  ],
+                  "minimum_should_match": 1
+                }
+              },
+              {
+                "bool": {
+                  "should": [
+                    {
+                      "match_phrase": {
+                        "user_agent.os.name": "Chorme"
+                      }
+                    }
+                  ],
+                  "minimum_should_match": 1
+                }
+              }
+            ],
+            "minimum_should_match": 1
+          }
+        },
+        {
+          "match_phrase": {
+            "url.path": "/"
+          }
+        },
+        {
+          "range": {
+            "@timestamp": {
+              "gte": "2020-01-01T11:48:31.278Z",
+              "lte": "2020-04-01T12:03:48.910Z",
+              "format": "strict_date_optional_time"
+            }
+          }
+        }
+      ],
+      "should": [],
+      "must_not": []
+    }
+  },
+  "highlight": {
+    "pre_tags": [
+      "@kibana-highlighted-field@"
+    ],
+    "post_tags": [
+      "@/kibana-highlighted-field@"
+    ],
+    "fields": {
+      "*": {}
+    },
+    "fragment_size": 2147483647
+  }
+}
+```
+
 
 ### validate query
 
