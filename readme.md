@@ -1542,6 +1542,85 @@ GET /blogposts/_search
 
 ```
 
+`url.path:/ user_agent.os.name : ("Mac OS X"  or "Windows") and user_agent.name : "Chrome" `
+
+```json
+{
+"query": {
+    "bool": {
+      "must": [],
+      "filter": [
+        {
+          "bool": {
+            "filter": [
+              {
+                "bool": {
+                  "should": [
+                    {
+                      "bool": {
+                        "should": [
+                          {
+                            "match_phrase": {
+                              "user_agent.os.name": "Mac OS X"
+                            }
+                          }
+                        ],
+                        "minimum_should_match": 1
+                      }
+                    },
+                    {
+                      "bool": {
+                        "should": [
+                          {
+                            "match_phrase": {
+                              "user_agent.os.name": "Windows"
+                            }
+                          }
+                        ],
+                        "minimum_should_match": 1
+                      }
+                    }
+                  ],
+                  "minimum_should_match": 1
+                }
+              },
+              {
+                "bool": {
+                  "should": [
+                    {
+                      "match_phrase": {
+                        "user_agent.name": "Chrome"
+                      }
+                    }
+                  ],
+                  "minimum_should_match": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "match_phrase": {
+            "url.path": "/"
+          }
+        },
+        {
+          "range": {
+            "@timestamp": {
+              "gte": "2020-01-01T11:48:31.278Z",
+              "lte": "2020-04-01T12:03:48.910Z",
+              "format": "strict_date_optional_time"
+            }
+          }
+        }
+      ],
+      "should": [],
+      "must_not": []
+    }
+  }
+}  
+```
+
 
 ### validate query
 
