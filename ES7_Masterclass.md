@@ -974,10 +974,20 @@ PUT /blogposts
         "type": "long"
       },
       "tags": {
-        "type": "text"
+        "type": "text",
+        "fields": {
+            "keyword": {
+                "type": "keyword"
+            }
+        }
       },
       "status": {
-        "type": "text"
+        "type": "text",
+        "fields": {
+            "keyword": {
+                "type": "keyword"
+            }
+        }
       }
     }
   }
@@ -1503,3 +1513,1059 @@ GET /blogposts/_search
 ```
 
 
+## Boost
+
+### boost in query
+```
+GET /blogposts/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "match": {
+            "title": {
+              "query": "elasticsearch",
+              "boost": 2
+            }
+          }
+        },
+        {
+          "match": {
+            "content": {
+              "query": "elasticsearch"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+```
+### boost one filed in multi_match
+```
+GET /blogposts/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "elasticsearch",
+      "fields": [
+        "title^2",
+        "content"
+      ]
+    }
+  }
+}
+
+
+```
+### boost in mappings
+PUT /blogposts
+
+```json
+
+{
+  "settings": {
+    "number_of_replicas": 1,
+    "number_of_shards": 1,
+    "analysis": {
+      "analyzer": {
+        "my_custom_analyzer": {
+          "type": "custom",
+          "char_filter": [
+            "symbol"
+          ],
+          "tokenizer": "punctuation",
+          "filter": [
+           "lowercase", "my_stop"
+          ]
+        }
+      },
+      "tokenizer": {
+        "punctuation": {
+          "type": "pattern",
+          "pattern": "[ .,!?]"
+        }
+      },
+      "char_filter": {
+        "symbol": {
+          "type": "mapping",
+          "mappings": [
+            "& => and",
+            ":) => happy",
+            ":( => sad"
+          ]
+        }
+      },
+      "filter": {
+        "my_stop": {
+          "type": "stop",
+          "stopwords": "_english_"
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "title": {
+        "type": "text",
+        "analyzer": "my_custom_analyzer",
+        "boost": 2,
+        "fields": {
+            "keyword": {
+                "type": "keyword"
+            }
+        }
+      },
+      "content": {
+        "type": "text",
+        "analyzer": "my_custom_analyzer"
+      },
+      "published_date": {
+        "type": "date"
+      },
+      "no_of_likes": {
+        "type": "long"
+      },
+      "tags": {
+        "type": "text"
+      },
+      "status": {
+        "type": "text"
+      }
+    }
+  }
+}
+```
+
+
+# Aggregation
+
+### aggs on all doc - count(*) by tag
+
+`count(*) group by each tag`
+
+
+```
+GET /blogposts/_search
+{
+  "aggs": {
+    "tog_tag": {
+      "terms": {
+        "field": "tags.keyword",
+        "size": 10
+      }
+    }
+  }
+}
+
+```
+
+### aggs based on query
+
+
+```
+GET /blogposts/_search
+{
+  "query": {
+    "term": {
+      "status": {
+        "value": "published"
+      }
+    }
+  }, 
+  "aggs": {
+    "tog_tag": {
+      "terms": {
+        "field": "tags.keyword",
+        "size": 10
+      }
+    }
+  }
+}
+
+GET /blogposts/_search
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "range": {
+            "no_of_likes": {
+              "gte": 100
+            }
+          }
+        }
+      ]
+    }
+ 
+  }, 
+  "aggs": {
+    "tog_tag": {
+      "terms": {
+        "field": "tags.keyword",
+        "size": 10
+      }
+    }
+  }
+}
+
+```
+output: 
+```json
+{
+"aggregations" : {
+    "tog_tag" : {
+      "doc_count_error_upper_bound" : 0,
+      "sum_other_doc_count" : 21,
+      "buckets" : [
+        {
+          "key" : "elasticsearch",
+          "doc_count" : 6
+        },
+        {
+          "key" : "react",
+          "doc_count" : 3
+        },
+        {
+          "key" : "big data",
+          "doc_count" : 2
+        },
+        
+        ...
+      ]
+    }
+  }
+}
+
+```
+### post_filter
+  `1.query --> 2.aggs --> 3.post_filter`
+
+  aggs only apply on the result of query
+
+```
+GET /blogposts/_search
+{
+  "query": {
+    "term": {
+      "status": {
+        "value": "published"
+      }
+    }
+  },
+  
+  "aggs": {
+    "tog_tag": {
+      "terms": {
+        "field": "tags.keyword",
+        "size": 10
+      }
+    }
+  },
+  "post_filter": {
+    "range": {
+      "no_of_likes": {
+        "gte": 100
+      }
+    }
+  }
+}
+
+```
+```json
+{
+  "took" : 2,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 1,
+    "successful" : 1,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : {
+      "value" : 10,
+      "relation" : "eq"
+    },
+    "max_score" : 0.5260931,
+    "hits" : [
+      {
+        "_index" : "blogposts",
+        "_type" : "_doc",
+        "_id" : "8",
+        "_score" : 0.5260931,
+        "_source" : {
+          "title" : "How are big data and ai changing the business world?",
+          "content" : "Today’s businesses are ruled by data. Specifically, big data and AI that have gradually been evolving to shape day-to-day business processes and playing as the key driver in business Intelligence decision-making",
+          "published_date" : "2020-01-01",
+          "tags" : [
+            "big data",
+            "ai"
+          ],
+          "no_of_likes" : 120,
+          "status" : "published"
+        }
+      },
+      {
+        "_index" : "blogposts",
+        "_type" : "_doc",
+        "_id" : "14",
+        "_score" : 0.5260931,
+        "_source" : {
+          "title" : "How to choose a database for your application",
+          "content" : "From performance to programmability, the right database makes all the difference. Here are 12 key questions to help guide your selection",
+          "published_date" : "2009-02-12",
+          "tags" : [
+            "database"
+          ],
+          "no_of_likes" : 229,
+          "status" : "published"
+        }
+      },
+      ...
+      
+    ]
+  },
+  "aggregations" : {
+    "tog_tag" : {
+      "doc_count_error_upper_bound" : 0,
+      "sum_other_doc_count" : 21,
+      "buckets" : [
+        {
+          "key" : "elasticsearch",
+          "doc_count" : 6
+        },
+        {
+          "key" : "react",
+          "doc_count" : 3
+        },
+        {
+          "key" : "big data",
+          "doc_count" : 2
+        },
+        {
+          "key" : "datastructures",
+          "doc_count" : 2
+        },
+       ...
+      ]
+    }
+  }
+}
+
+```
+
+## avg
+
+`avg(avg_no_of_likes) group by each tag`
+
+```
+GET /blogposts/_search
+{
+  "aggs": {
+    "tog_tag": {
+      "terms": {
+        "field": "tags.keyword",
+        "size": 10
+      },
+      "aggs": {
+        "avg_no_of_likes": {
+          "avg": {
+            "field": "no_of_likes"
+          }
+        }
+      }
+    }
+  }
+}
+```
+output:
+```json
+{
+"aggregations" : {
+    "tog_tag" : {
+      "doc_count_error_upper_bound" : 0,
+      "sum_other_doc_count" : 43,
+      "buckets" : [
+        {
+          "key" : "elasticsearch",
+          "doc_count" : 9,
+          "avg_no_of_likes" : {
+            "value" : 118.33333333333333
+          }
+        },
+        {
+          "key" : "java",
+          "doc_count" : 4,
+          "avg_no_of_likes" : {
+            "value" : 61.0
+          }
+        },
+        {
+          "key" : "react",
+          "doc_count" : 3,
+          "avg_no_of_likes" : {
+            "value" : 117.66666666666667
+          }
+        },
+        
+       ....
+      ]
+    }
+  }
+}
+```
+## avg/min/max
+
+```
+GET /blogposts/_search
+{
+  "aggs": {
+    "tog_tag": {
+      "terms": {
+        "field": "tags.keyword",
+        "size": 10
+      },
+      "aggs": {
+        "avg_no_of_likes": {
+          "avg": {
+            "field": "no_of_likes"
+          }
+        },
+        "minimu_no_likes": {
+          "min": {
+            "field": "no_of_likes"
+          }
+        },
+        "maximu_no_likes": {
+          "max": {
+            "field": "no_of_likes"
+          }
+        }
+      }
+    }
+  }
+}
+```
+output:
+```json
+{
+"aggregations" : {
+    "tog_tag" : {
+      "doc_count_error_upper_bound" : 0,
+      "sum_other_doc_count" : 43,
+      "buckets" : [
+        {
+          "key" : "elasticsearch",
+          "doc_count" : 9,
+          "avg_no_of_likes" : {
+            "value" : 118.33333333333333
+          },
+          "minimu_no_likes" : {
+            "value" : 10.0
+          },
+          "maximu_no_likes" : {
+            "value" : 235.0
+          }
+        },
+        ....
+      ]
+    }      
+
+```
+## stats
+```
+GET /blogposts/_search
+{
+  "aggs": {
+    "tog_tag": {
+      "terms": {
+        "field": "tags.keyword",
+        "size": 10
+      },
+      "aggs": {
+        "stats_likes": {
+          "stats": {
+            "field": "no_of_likes"
+          }
+        }
+        
+      }
+    }
+  }
+}
+```
+output:
+```json
+{
+ "aggregations" : {
+    "tog_tag" : {
+      "doc_count_error_upper_bound" : 0,
+      "sum_other_doc_count" : 43,
+      "buckets" : [
+        {
+          "key" : "elasticsearch",
+          "doc_count" : 9,
+          "stats_likes" : {
+            "count" : 9,
+            "min" : 10.0,
+            "max" : 235.0,
+            "avg" : 118.33333333333333,
+            "sum" : 1065.0
+          }
+        },
+        {
+          "key" : "java",
+          "doc_count" : 4,
+          "stats_likes" : {
+            "count" : 4,
+            "min" : 3.0,
+            "max" : 128.0,
+            "avg" : 61.0,
+            "sum" : 244.0
+          }
+        },
+        ...
+      ]
+    }        
+
+```
+
+## extended_stats
+
+```
+GET /blogposts/_search
+{
+  "aggs": {
+    "tog_tag": {
+      "terms": {
+        "field": "tags.keyword",
+        "size": 10
+      },
+      "aggs": {
+        "stats_likes": {
+          "extended_stats": {
+            "field": "no_of_likes"
+          }
+        }
+        
+      }
+    }
+  }
+}
+```
+output:
+```json
+{
+"aggregations" : {
+    "tog_tag" : {
+      "doc_count_error_upper_bound" : 0,
+      "sum_other_doc_count" : 43,
+      "buckets" : [
+        {
+          "key" : "elasticsearch",
+          "doc_count" : 9,
+          "stats_likes" : {
+            "count" : 9,
+            "min" : 10.0,
+            "max" : 235.0,
+            "avg" : 118.33333333333333,
+            "sum" : 1065.0,
+            "sum_of_squares" : 166265.0,
+            "variance" : 4471.111111111111,
+            "variance_population" : 4471.111111111111,
+            "variance_sampling" : 5030.0,
+            "std_deviation" : 66.86636756330579,
+            "std_deviation_population" : 66.86636756330579,
+            "std_deviation_sampling" : 70.92249290598858,
+            "std_deviation_bounds" : {
+              "upper" : 252.06606845994492,
+              "lower" : -15.399401793278244,
+              "upper_population" : 252.06606845994492,
+              "lower_population" : -15.399401793278244,
+              "upper_sampling" : 260.17831914531047,
+              "lower_sampling" : -23.511652478643825
+            }
+          }
+        },
+      ...
+      ]
+}
+```
+
+## number range aggs
+```
+GET /blogposts/_search
+{
+  "aggs": {
+    "range_aggs": {
+      "range": {
+        "field": "no_of_likes",
+        "ranges": [
+          {
+            "from": 0,
+            "to": 50
+          },
+          {
+            "from": 50,
+            "to": 100
+          },
+          {
+            "from": 50,
+            "to": 200
+          }
+        ]
+      }
+    }
+  }
+}
+```
+output:
+
+```json
+{
+"aggregations" : {
+    "range_aggs" : {
+      "buckets" : [
+        {
+          "key" : "0.0-50.0",
+          "from" : 0.0,
+          "to" : 50.0,
+          "doc_count" : 11
+        },
+        {
+          "key" : "50.0-100.0",
+          "from" : 50.0,
+          "to" : 100.0,
+          "doc_count" : 1
+        },
+        {
+          "key" : "50.0-200.0",
+          "from" : 50.0,
+          "to" : 200.0,
+          "doc_count" : 17
+        }
+      ]
+    }
+  }
+}
+```
+
+## stats base on range
+```
+GET /blogposts/_search
+{
+  "size": 0, 
+  "aggs": {
+    "range_aggs": {
+      "range": {
+        "field": "no_of_likes",
+        "ranges": [
+          {
+            "from": 0,
+            "to": 50
+          },
+          {
+            "from": 50,
+            "to": 100
+          },
+          {
+            "from": 100
+          }
+        ]
+      },
+      "aggs": {
+        "range_stats": {
+          "stats": {
+            "field": "no_of_likes"
+          }
+        }
+      }
+    }
+  }
+}
+
+```
+output:
+```json
+{
+    "aggregations" : {
+    "range_aggs" : {
+      "buckets" : [
+        {
+          "key" : "0.0-50.0",
+          "from" : 0.0,
+          "to" : 50.0,
+          "doc_count" : 11,
+          "range_stats" : {
+            "count" : 11,
+            "min" : 2.0,
+            "max" : 43.0,
+            "avg" : 17.09090909090909,
+            "sum" : 188.0
+          }
+        },
+        ...
+      ]
+}
+```
+
+## only get aggs result, no query result
+
+set `"size": 0`
+
+```
+GET /blogposts/_search
+{
+  "size": 0, 
+  "query": {
+    "term": {
+      "status": {
+        "value": "published"
+      }
+    }
+  }, 
+  "aggs": {
+    "tog_tag": {
+      "terms": {
+        "field": "tags.keyword",
+        "size": 10
+      }
+    }
+  }
+}
+```
+
+## date_range aggs
+```
+GET /blogposts/_search
+{
+  "size": 0,
+  "aggs": {
+    "daterange_aggs": {
+      "date_range": {
+        "field": "published_date",
+        "ranges": [
+          {
+            "from": "now-24M/M",
+            "to": "now"
+          },
+          {
+            "from": "2015-12-31",
+            "to": "2016-12-31"
+          },
+          {
+            "from": "2016-12-31"
+          }
+        ]
+      },
+      "aggs": {
+        "stats_aggs": {
+          "stats": {
+            "field": "no_of_likes"
+          }
+        }
+      }
+    }
+  }
+}
+```
+output:
+```json
+{
+  "took" : 1,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 1,
+    "successful" : 1,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : {
+      "value" : 32,
+      "relation" : "eq"
+    },
+    "max_score" : null,
+    "hits" : [ ]
+  },
+  "aggregations" : {
+    "daterange_aggs" : {
+      "buckets" : [
+        {
+          "key" : "2015-12-31T00:00:00.000Z-2016-12-31T00:00:00.000Z",
+          "from" : 1.45152E12,
+          "from_as_string" : "2015-12-31T00:00:00.000Z",
+          "to" : 1.4831424E12,
+          "to_as_string" : "2016-12-31T00:00:00.000Z",
+          "doc_count" : 1,
+          "stats_aggs" : {
+            "count" : 1,
+            "min" : 43.0,
+            "max" : 43.0,
+            "avg" : 43.0,
+            "sum" : 43.0
+          }
+        },
+        {
+          "key" : "2016-12-31T00:00:00.000Z-*",
+          "from" : 1.4831424E12,
+          "from_as_string" : "2016-12-31T00:00:00.000Z",
+          "doc_count" : 15,
+          "stats_aggs" : {
+            "count" : 15,
+            "min" : 2.0,
+            "max" : 235.0,
+            "avg" : 88.8,
+            "sum" : 1332.0
+          }
+        },
+        {
+          "key" : "2018-12-01T00:00:00.000Z-2020-12-18T03:28:38.955Z",
+          "from" : 1.5436224E12,
+          "from_as_string" : "2018-12-01T00:00:00.000Z",
+          "to" : 1.608262118955E12,
+          "to_as_string" : "2020-12-18T03:28:38.955Z",
+          "doc_count" : 12,
+          "stats_aggs" : {
+            "count" : 12,
+            "min" : 2.0,
+            "max" : 235.0,
+            "avg" : 107.0,
+            "sum" : 1284.0
+          }
+        }
+      ]
+    }
+  }
+}
+
+```
+## aggs by range - histogram
+
+```
+GET /blogposts/_search
+{
+  "size": 0,
+  "aggs": {
+    "hist_aggs": {
+      "histogram": {
+        "field": "no_of_likes",
+        "interval": 50
+      }
+    }
+  }
+}
+```
+output:
+```json
+{
+  "took" : 7,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 1,
+    "successful" : 1,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : {
+      "value" : 32,
+      "relation" : "eq"
+    },
+    "max_score" : null,
+    "hits" : [ ]
+  },
+  "aggregations" : {
+    "hist_aggs" : {
+      "buckets" : [
+        {
+          "key" : 0.0,
+          "doc_count" : 11
+        },
+        {
+          "key" : 50.0,
+          "doc_count" : 1
+        },
+        {
+          "key" : 100.0,
+          "doc_count" : 11
+        },
+        {
+          "key" : 150.0,
+          "doc_count" : 5
+        },
+        {
+          "key" : 200.0,
+          "doc_count" : 2
+        },
+        ...
+      ]
+    }
+  }
+}
+
+```
+
+## aggs by range - date_histogram
+```
+
+GET /blogposts/_search
+{
+  "size": 0,
+  "aggs": {
+    "hist_aggs": {
+      "date_histogram": {
+        "field": "published_date",
+        "interval": "year"
+      }
+    }
+  }
+}
+
+```
+
+```
+GET /blogposts/_search
+{
+  "size": 0,
+  "aggs": {
+    "hist_aggs": {
+      "date_histogram": {
+        "field": "published_date",
+        "interval": "year"
+      },
+      "aggs": {
+        "tag_aggs": {
+          "terms": {
+            "field": "tags.keyword",
+            "size": 10
+          }
+        }
+      }
+    }
+  }
+}
+```
+output:
+```json
+{
+"aggregations" : {
+    "hist_aggs" : {
+      "buckets" : [
+        {
+          "key_as_string" : "2009-01-01T00:00:00.000Z",
+          "key" : 1230768000000,
+          "doc_count" : 3,
+          "tag_aggs" : {
+            "doc_count_error_upper_bound" : 0,
+            "sum_other_doc_count" : 0,
+            "buckets" : [
+              {
+                "key" : "array",
+                "doc_count" : 1
+              },
+              {
+                "key" : "database",
+                "doc_count" : 1
+              },
+              {
+                "key" : "datastructure",
+                "doc_count" : 1
+              },
+              {
+                "key" : "jaava",
+                "doc_count" : 1
+              },
+              {
+                "key" : "language",
+                "doc_count" : 1
+              },
+              {
+                "key" : "scala",
+                "doc_count" : 1
+              }
+            ]
+          }
+        }
+        ....
+    ]
+}
+```
+## sum
+```
+GET /blogposts/_search
+{
+  "size": 0,
+  "aggs": {
+    "hist_aggs": {
+      "date_histogram": {
+        "field": "published_date",
+        "interval": "year"
+      },
+      "aggs": {
+        "tag_aggs": {
+          "terms": {
+            "field": "tags.keyword",
+            "size": 10
+          },
+          "aggs": {
+            "sum_agges": {
+              "sum": {
+                "field": "no_of_likes"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+output: 
+```json
+{
+     "aggregations" : {
+    "hist_aggs" : {
+      "buckets" : [
+          ...
+
+         {
+          "key_as_string" : "2019-01-01T00:00:00.000Z",
+          "key" : 1546300800000,
+          "doc_count" : 10,
+          "tag_aggs" : {
+            "doc_count_error_upper_bound" : 0,
+            "sum_other_doc_count" : 3,
+            "buckets" : [
+              {
+                "key" : "elasticsearch",
+                "doc_count" : 5,
+                "sum_agges" : {
+                  "value" : 764.0
+                }
+              },
+              {
+                "key" : "react",
+                "doc_count" : 3,
+                "sum_agges" : {
+                  "value" : 353.0
+                }
+              },
+              {
+                "key" : "deployment",
+                "doc_count" : 1,
+                "sum_agges" : {
+                  "value" : 100.0
+                }
+              },
+              ...
+            ]
+          }
+        },
+        ....
+      ]
+}
+```
