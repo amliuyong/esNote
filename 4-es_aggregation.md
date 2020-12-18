@@ -1,4 +1,4 @@
-# laod test data from file
+# load test data from file
 
 ```
 curl -H "Content-Type: application/x-ndjson" -XPOST http://localhost:9200/order/_bulk --data-binary "@orders-bulk.json"
