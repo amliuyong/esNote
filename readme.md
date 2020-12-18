@@ -1430,6 +1430,9 @@ GET /blogposts/_search
 ```
 
 ## KQL 
+ - how to map `and`
+ - how to map `or`
+ - how to map `range`
 
 `url.path:/ and user_agent.os.name : ("Windows"  or "Mac OS X")` 
 
