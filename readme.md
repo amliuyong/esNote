@@ -1429,9 +1429,12 @@ GET /blogposts/_search
 }
 ```
 
-## KQL `url.path:/ and user_agent.os.name : ("Windows"  or "Chorme")` 
+## KQL 
+
+`url.path:/ and user_agent.os.name : ("Windows"  or "Mac OS X")` 
 
 ```json
+
 {
   "version": true,
   "size": 500,
@@ -1478,7 +1481,7 @@ GET /blogposts/_search
                   "should": [
                     {
                       "match_phrase": {
-                        "user_agent.os.name": "Windows"
+                        "user_agent.os.name": "Mac OS X"
                       }
                     }
                   ],
@@ -1490,7 +1493,7 @@ GET /blogposts/_search
                   "should": [
                     {
                       "match_phrase": {
-                        "user_agent.os.name": "Chorme"
+                        "user_agent.os.name": "Windows"
                       }
                     }
                   ],
@@ -1533,6 +1536,7 @@ GET /blogposts/_search
     "fragment_size": 2147483647
   }
 }
+
 ```
 
 
