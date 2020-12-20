@@ -5,7 +5,7 @@ logstash-7.10.1/bin/logstash -f logstash-7.10.1/config/logstash-access_log.conf
 
 ```
 
-# Apache access log to logstash
+# Apache log to logstash
 
 ```conf
 
