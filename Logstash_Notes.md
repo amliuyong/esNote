@@ -718,3 +718,122 @@ output {
 }
 
 ```
+
+# Input plugin
+
+## heartbeat
+
+```conf
+
+input {
+  heartbeat {
+    message => "epoch"
+    # message => "sequence"
+    # message => "ok"
+    interval => 5
+    type => "heartbeat"
+  }
+}
+
+output {
+  if [type] == "heartbeat" {
+     elasticsearch {
+     hosts => "http://localhost:9200"
+     index => "heartbeat-epoch"
+ 	 }
+  }
+ stdout {
+  codec => "rubydebug"
+  }
+ 
+}
+```
+## generator - gen test data
+
+```conf
+  input {
+      generator {
+        lines => [
+          '{"id": 1,"first_name": "Ford","last_name": "Tarn","email": "ftarn0@go.com","gender": "Male","ip_address": "112.29.200.6"}', 
+          '{"id": 2,"first_name": "Kalila","last_name": "Whitham","email": "kwhitham1@wufoo.com","gender": "Female","ip_address": "98.98.248.37"}'
+        ]
+        count => 0
+        codec =>  "json"
+      }
+    }
+
+output {
+     elasticsearch {
+     hosts => "http://localhost:9200"
+     index => "generator"
+  } 
+  stdout {
+  codec => "rubydebug"
+}
+}
+```
+
+## http poller 
+
+```conf
+input {
+    http_poller {
+        urls => {
+            external_api => {
+                method => post
+                url => "https://jsonplaceholder.typicode.com/posts"
+                body => '{ "title": "foo", "body": "bar", "userId": "1"}'
+                headers => {
+                    "content-type" => "application/json"
+                }
+            }
+        }
+        tags => "external-api"
+        request_timeout => 100
+        schedule => {
+            "every" => "5s"
+        }
+        codec => "json"
+        metadata_target => "http_poller_metadata"
+    }
+    http_poller {
+        urls => {
+            es_health_status => {
+                method => get
+                url => "http://localhost:9200/_cluster/health"
+                headers => {
+                    Accept => "application/json"
+                }
+            }
+        }
+        tags => "es_health"
+        request_timeout => 60
+        schedule => {
+            cron => "* * * * * UTC"
+        }
+        codec => "json"
+        metadata_target => "http_poller_metadata"
+    }
+
+}
+
+
+output {
+    if "es_health" in [tags] {
+        elasticsearch {
+            hosts => ["localhost:9200"]
+            index => "http-poller-es-health"
+        }
+    }
+    if "external-api" in [tags] {
+        elasticsearch {
+            hosts => ["localhost:9200"]
+            index => "http-poller-api"
+        }
+    }
+    stdout {
+        codec => "rubydebug"
+    }
+}
+
+```
