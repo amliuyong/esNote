@@ -594,3 +594,127 @@ output{
 
 
 ```
+
+## grok multiline - elasticsearch log
+```
+[2020-06-15T17:13:35,029][INFO ][o.e.x.s.s.SecurityStatusChangeListener] [node-1] Active license is now [BASIC]; Security is disabled
+[2020-06-15T17:13:35,097][INFO ][o.e.g.GatewayService     ] [node-1] recovered [18] indices into cluster_state
+[2020-06-15T17:13:35,457][WARN ][r.suppressed             ] [node-1] path: /.kibana/_count, params: {index=.kibana}
+org.elasticsearch.action.search.SearchPhaseExecutionException: all shards failed
+	at org.elasticsearch.action.search.AbstractSearchAsyncAction.onPhaseFailure(AbstractSearchAsyncAction.java:551) [elasticsearch-7.7.0.jar:7.7.0]
+	at org.elasticsearch.action.search.AbstractSearchAsyncAction.executeNextPhase(AbstractSearchAsyncAction.java:309) [elasticsearch-7.7.0.jar:7.7.0]
+	at org.elasticsearch.action.search.AbstractSearchAsyncAction.onPhaseDone(AbstractSearchAsyncAction.java:580) [elasticsearch-7.7.0.jar:7.7.0]
+	at org.elasticsearch.action.search.AbstractSearchAsyncAction.onShardFailure(AbstractSearchAsyncAction.java:393) [elasticsearch-7.7.0.jar:7.7.0]
+	at org.elasticsearch.action.search.AbstractSearchAsyncAction.lambda$performPhaseOnShard$0(AbstractSearchAsyncAction.java:223) [elasticsearch-7.7.0.jar:7.7.0]
+	at org.elasticsearch.action.search.AbstractSearchAsyncAction$2.doRun(AbstractSearchAsyncAction.java:288) [elasticsearch-7.7.0.jar:7.7.0]
+	at org.elasticsearch.common.util.concurrent.AbstractRunnable.run(AbstractRunnable.java:37) [elasticsearch-7.7.0.jar:7.7.0]
+	at org.elasticsearch.common.util.concurrent.TimedRunnable.doRun(TimedRunnable.java:44) [elasticsearch-7.7.0.jar:7.7.0]
+	at org.elasticsearch.common.util.concurrent.ThreadContext$ContextPreservingAbstractRunnable.doRun(ThreadContext.java:692) [elasticsearch-7.7.0.jar:7.7.0]
+	at org.elasticsearch.common.util.concurrent.AbstractRunnable.run(AbstractRunnable.java:37) [elasticsearch-7.7.0.jar:7.7.0]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130) [?:?]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:630) [?:?]
+	at java.lang.Thread.run(Thread.java:832) [?:?]
+
+```
+
+```conf
+
+input {
+  file {
+    path => "/etc/logstash/conf.d/logstash/elasticsearch_logs/elasticsearch.log"
+    type => "elasticsearch"
+    start_position => "beginning" 
+    sincedb_path => "/dev/null"
+    codec => multiline {
+      pattern => "^\["
+      negate => true
+      what => "previous"
+    }
+  }
+}
+
+filter {
+  if [type] == "elasticsearch" {
+    grok {
+      match => [ "message", "\[%{TIMESTAMP_ISO8601:timestamp}\]\[%{DATA:severity}%{SPACE}\]\[%{DATA:source}%{SPACE}\]%{SPACE}(?<message>(.|\r|\n)*)" ]
+      overwrite => [ "message" ]
+    }
+
+    if "_grokparsefailure" not in [tags] {
+      grok {  
+        match => [
+          "message", "^\[%{DATA:node}\] %{SPACE}\[%{DATA:index}\]%{SPACE}(?<short_message>(.|\r|\n)*)",
+          "message", "^\[%{DATA:node}\]%{SPACE}(?<short_message>(.|\r|\n)*)" ]
+        tag_on_failure => []
+      }
+    }
+  }
+}
+
+output {
+  elasticsearch {
+            hosts => [ "localhost:9200"]
+            index => "es-test-logs"
+        }
+  stdout { codec => rubydebug }
+}
+```
+
+## grok multiline - mysql-slow log
+
+```
+# Time: 2020-06-03T06:03:33.675799Z
+# User@Host: root[root] @ localhost []  Id:     4
+# Query_time: 2.064824  Lock_time: 0.000000 Rows_sent: 1  Rows_examined: 0
+SET timestamp=1591164213;
+SELECT SLEEP(2);
+# Time: 2020-06-03T06:04:09.582225Z
+# User@Host: root[root] @ localhost []  Id:     4
+# Query_time: 3.000192  Lock_time: 0.000000 Rows_sent: 1  Rows_examined: 0
+SET timestamp=1591164249;
+SELECT SLEEP(3);
+
+```
+
+```conf
+
+input {
+file {
+   path => ["/etc/logstash/conf.d/logstash/mysql_slowlogs/mysql-slow.log"]
+   start_position => "beginning"
+   sincedb_path => "/dev/null"
+   codec => multiline {
+          pattern => "^# Time: %{TIMESTAMP_ISO8601}"
+          negate => true
+          what => "previous"
+        }
+ }
+}
+filter {
+      mutate {
+        gsub => [
+          "message", "#", "",
+          "message", "\n", " "
+        ]
+        remove_field => "host"
+      }
+      grok {
+        match => { "message" => [
+              "Time\:%{SPACE}%{TIMESTAMP_ISO8601:timestamp}%{SPACE}User\@Host\:%{SPACE}%{WORD:user}\[%{NOTSPACE}\] \@ %{NOTSPACE:host} \[\]%{SPACE}Id\:%{SPACE}%{NUMBER:sql_id}%{SPACE}Query_time\:%{SPACE}%{NUMBER:query_time}%{SPACE}Lock_time\:%{SPACE}%{NUMBER:lock_time}%{SPACE}Rows_sent\:%{SPACE}%{NUMBER:rows_sent}%{SPACE}Rows_examined\:%{SPACE}%{NUMBER:rows_examined}%{SPACE}%{GREEDYDATA}; %{GREEDYDATA:command}\;%{GREEDYDATA}" 
+       ] }
+      }
+      
+      mutate {
+        add_field => { "read_timestamp" => "%{@timestamp}" }
+        #remove_field => "message"
+      }
+}
+output {
+  elasticsearch {
+            hosts => [ "localhost:9200"]
+            index => "mysql-slowlogs-01"
+        }
+  stdout { codec => rubydebug }
+}
+
+```
