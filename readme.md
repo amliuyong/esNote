@@ -22,6 +22,9 @@ curl -H "Content-Type: application/x-ndjson" -XPOST http://localhost:9200/order/
 ## cloud
 curl -H "Content-Type: application/x-ndjson" -XPOST -u elastic:your_password https://elastic-cloud-endpoint.com:9243/_bulk --data-binary "@orders.bulk.ndjson"
 
+## by ES API
+https://github.com/amliuyong/esNote/blob/master/IndexRatings.py
+
 ```
 
 
