@@ -835,3 +835,57 @@ output {
 }
 
 ```
+
+## tcp - syslog to logstash
+1. `sudo vim /etc/rsyslog.d/50-default.conf`
+  
+2. add the following line , just above the commented line #First some standard log files. Log by facility
+```
+*.*                         @@127.0.0.1:10514
+```
+
+Note
+@@ for TCP
+@ for UDP
+it will look as below
+https://drive.google.com/file/d/1EuYKAD9A9tIpj2Jy0xqsDWeRTEnJ_9zM/view?usp=sharing 
+
+3. save the file
+4. restart the syslog service 
+```
+sudo service rsyslog restart
+```
+
+```conf
+
+input {
+  tcp {
+    port => 10514
+    type => syslog
+  }
+}
+
+filter {
+  if [type] == "syslog" {
+    grok {
+      match => { "message" => "%{SYSLOGTIMESTAMP:syslog_timestamp} %{SYSLOGHOST:syslog_hostname} %{DATA:syslog_program}(?:\[%{POSINT:syslog_pid}\])?: %{GREEDYDATA:syslog_message}" }
+      add_field => [ "received_at", "%{@timestamp}" ]
+      add_field => [ "received_from", "%{host}" ]
+    }
+    date {
+      match => [ "syslog_timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
+    }
+  }
+}
+
+output{
+  elasticsearch{
+    hosts => ["localhost:9200"] 
+    index => "syslog-direct-05" 
+  }
+  stdout { 
+    codec => "rubydebug"
+   }
+}
+
+```
