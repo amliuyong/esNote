@@ -5,7 +5,7 @@ logstash-7.10.1/bin/logstash -f logstash-7.10.1/config/logstash-access_log.conf
 
 ```
 
-# Apache access log
+# Apache access log to logstash
 
 ```conf
 
@@ -37,7 +37,7 @@ output {
 
 
 ```
-# From Stdin
+# Stdin to logstash
 ```conf
 input{
     stdin{
@@ -64,7 +64,7 @@ output{
 }
 
 ```
-# rename and output to file
+## output to file
 
 ```conf
 input{
