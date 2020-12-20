@@ -5,7 +5,11 @@ https://www.elastic.co/guide/en/kibana/current/kuery-query.html
 
 # Setup data
 
+https://github.com/amliuyong/esNote/blob/master/test-data.zip
+
 ## Create index template for index: `access-logs*` and `orders*`
+
+
 
 PUT /_template/access-logs
 ```json
