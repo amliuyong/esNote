@@ -200,8 +200,11 @@ PUT _bulk
 ## do search
 
 `GET /blogposts/_search?q=java`
+
 `GET /blogposts/_search?q=java python`
+
 `GET /blogposts/_search?q=content:java`
+
 
 ### search from browser
 http://localhost:9200/blogposts/_search?pretty
