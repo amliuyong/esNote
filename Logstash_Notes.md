@@ -518,3 +518,34 @@ output
       }
 
 ```
+
+
+# grok filter - parese unstructure data
+
+```conf
+input {
+  file {
+    path => "/home/student/03-grok-examples/sample.log"
+    start_position => "beginning"
+    sincedb_path => "/dev/null"
+  }
+}
+
+filter {
+  grok {
+    match => { "message" => [
+              '%{TIMESTAMP_ISO8601:time} %{LOGLEVEL:logLevel} %{GREEDYDATA:logMessage}',
+              '%{IP: } %{WORD:httpMethod} %{URIPATH:url}'
+              ] }
+  }
+}
+
+output {
+   elasticsearch {
+     hosts => "http://localhost:9200"
+     index => "demo-grok-multiple"
+  }
+
+stdout {}
+
+}
