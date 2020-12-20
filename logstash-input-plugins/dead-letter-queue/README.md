@@ -3,7 +3,9 @@
  chown -R logstash:logstash /home/student/logstash/dead-letter-queue
 ```
 1. open logstash.yml file
+```
 sudo nano /etc/logstash/logstash.yml
+```
 
 2. uncomment the following line and make it "true"
 ```
