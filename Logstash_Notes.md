@@ -814,9 +814,7 @@ input {
         codec => "json"
         metadata_target => "http_poller_metadata"
     }
-
 }
-
 
 output {
     if "es_health" in [tags] {
