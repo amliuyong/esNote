@@ -216,6 +216,16 @@ http://localhost:9200/blogposts/_search?q=java%20python&pretty
 
 ## Query DSL
 ```
+
+// get total count
+
+GET /blogposts/_search 
+{
+ "track_total_hits":"true", 
+ "size": 0
+}
+
+
 // match
 GET /blogposts/_search 
 {
@@ -1091,6 +1101,14 @@ GET /blogposts/_search
     "match_all": {}
   }
 }
+
+// get total count
+GET /blogposts/_search 
+{
+ "track_total_hits":"true", 
+ "size": 0
+}
+
 
 // top N document - size
 
