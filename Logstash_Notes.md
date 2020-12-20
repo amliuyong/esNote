@@ -522,6 +522,11 @@ output
 
 # grok filter - parese unstructure data
 
+https://www.elastic.co/guide/en/logstash/current/plugins-filters-grok.html
+
+http://grokdebug.herokuapp.com/
+
+
 ```conf
 input {
   file {
@@ -549,3 +554,43 @@ output {
 stdout {}
 
 }
+```
+## grok for Nigx log
+```
+73.44.199.53 - - [01/Jun/2020:15:49:10 +0000] "GET /blog/join-in-mongodb/?relatedposts=1 HTTP/1.1" 200 131 "https://www.techstuds.com/blog/join-in-mongodb/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36"
+
+```
+
+```conf
+input {
+file {
+   path => ["/etc/logstash/conf.d/logstash/nginx/access.log"]
+   start_position => "beginning"
+   sincedb_path => "/dev/null"
+ }
+}
+filter {
+      grok {
+        match => { "message" => ["%{IPORHOST:remote_ip} - %{DATA:user_name} \[%{HTTPDATE:access_time}\] \"%{WORD:http_method} %{DATA:url} HTTP/%{NUMBER:http_version}\" %{NUMBER:response_code} %{NUMBER:body_sent_bytes} \"%{DATA:referrer}\" \"%{DATA:agent}\""] }
+        remove_field => "message"
+      }
+      mutate {
+        add_field => { "read_timestamp" => "%{@timestamp}" }
+      }
+      date {
+        match => [ "timestamp", "dd/MMM/YYYY:H:m:s Z" ]
+        remove_field => "timestamp"
+      }
+}
+output{
+  elasticsearch{
+    hosts => ["localhost:9200"] 
+    index => "nginx-access-logs-02" 
+  }
+  stdout { 
+    codec => "rubydebug"
+   }
+}
+
+
+```
