@@ -845,16 +845,20 @@ output {
 ```
 
 Note
+```
 @@ for TCP
 @ for UDP
+```
 it will look as below
 https://drive.google.com/file/d/1EuYKAD9A9tIpj2Jy0xqsDWeRTEnJ_9zM/view?usp=sharing 
 
 3. save the file
+ 
 4. restart the syslog service 
 ```
 sudo service rsyslog restart
 ```
+### confg
 
 ```conf
 
