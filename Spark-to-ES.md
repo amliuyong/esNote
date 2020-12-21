@@ -55,7 +55,7 @@ people.saveToEs("spark-friends")
 
 ```
 ### ratings.csv to ES
-```
+```scala
 import org.elasticsearch.spark.sql._
 
 case class Rating(userID:Int, movieID: Int, rating:Float, timestamp:Int)
