@@ -893,3 +893,62 @@ output{
 }
 
 ```
+## AWS SQS/S3 to logstash
+
+https://www.elastic.co/guide/en/logstash/current/plugins-inputs-sqs.html
+
+https://www.elastic.co/guide/en/logstash/current/plugins-inputs-s3.html
+
+
+## Hadoop to ES
+
+https://github.com/amliuyong/esNote/blob/master/Hadoop-to-ES.md
+
+
+## Kafka to logstash
+
+https://www.elastic.co/guide/en/logstash/current/plugins-inputs-kafka.html
+
+```conf
+input {
+   kafka {
+     bootstrap_servers => "localhost:9092"
+     topics => ["kafka-logs"]
+   }
+ }
+
+
+filter {
+    grok {
+        match => { "message" => "%{COMBINEDAPACHELOG}" }
+    }
+    date {
+        match =>  [ "timestamp", "dd/MMM/yyyy:HH:mm:ss Z" ]
+    }
+}
+
+output {
+    elasticsearch {
+        hosts => ["localhost:9200"]
+        index => "server_acc_log_kafka"
+    }
+    stdout {
+        codec => rubydebug
+    }
+}
+```
+### send data to kafka
+
+```sh
+$KAFKA_HOME/bin/kafka-console-producer.sh  --broker-list localhost:9092 --topic kafka-logs  < $DATA_PATH/access_log
+
+```
+
+## Kafka Consumer to ES via es.RestHighLevelClient
+
+https://github.com/amliuyong/kafka-v2/tree/master/kafka-consumer-elasticsearch
+
+
+
+# Spark to ES
+
