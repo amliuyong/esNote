@@ -8,7 +8,12 @@ Document --> Row
 
 http://localhost:5601
 
-curl -i -XGET 'localhost:9200'
+`curl -i -XGET 'localhost:9200'`
+
+`curl -XGET localhost:9200/_cluster/health?pretty`
+
+`curl -XGET localhost:9200/_cluster/allocation/explain`
+
 
 http://localhost:5601/app/dev_tools#/console
 
@@ -3040,7 +3045,7 @@ su - elasticsearch
 sudo chgrp elasticsearch /path/to/backup
 sudo chmod g+w /path/to/backup
 ```
-### backup all index
+### backup all indices
 ```
 PUT /_snapshot/backup-repo 
 {
@@ -3054,7 +3059,21 @@ PUT /_snapshot/backup-repo/snapshot-1
 
 GET /_snapshot/backup-repo/snapshot-1
 
+GET /_cat/snapshots/backup-repo
+
 ```
+### restore 
+```
+// close all index
+POST /_all/_close
+
+POST /_snapshot/backup-repo/snapshot-1/_restore
+
+GET _cat/indices?v
+
+
+```
+
 ## check ealstic search log
 
 fix permission issue when check the elasticsearch log
