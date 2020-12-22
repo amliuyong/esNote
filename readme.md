@@ -2923,3 +2923,149 @@ output{
 ./bin/logstash -e 'input{stdin{}} output{stdout{}}'
 
 ```
+
+# Alias - add new data without re-index - powerful !!!!
+
+https://www.elastic.co/guide/en/elasticsearch/reference/6.8/indices-aliases.html
+
+POST /_aliases
+```json
+{
+  "actions": [
+    {
+      "add": {
+        "alias": "log_current",
+        "index": "logs_2018_06"
+      }
+    },
+    {
+      "remove": {
+        "alias": "log_current",
+        "index": "logs_2018_05"
+      }
+    },
+    {
+      "add": {
+        "alias": "log_last_3_months",
+        "index": "logs_2018_06"
+      }
+    },
+    {
+      "remove": {
+        "alias": "log_last_3_months",
+        "index": "logs_2018_03"
+      }
+    }
+  ]
+}
+
+```
+
+# Index Lifecycle
+
+`Hot  --> Warm (readonly) --> Cold --> Delete`
+
+
+### create lifecycle policy
+PUT _ilm/policy/datastream_policy
+```json
+{
+  "policy": {
+    "phases": {
+      "hot": {
+        "min_age": "1d",
+        "actions": {
+          "set_priority": {
+            "priority": 100
+          },
+          "rollover": {
+            "max_age": "30d",
+            "max_size": "50gb"
+          }
+        }
+      },
+      "delete": {
+        "min_age": "90d",
+        "actions": {
+          "delete": {}
+        }
+      }
+    }
+  }
+}
+```
+
+### add lifecycle to index template
+PUT _template/datastream_template
+```json
+{
+  "index_patterns": ["datastream-*"],
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 1,
+    "index.lifecycle.name": "datastream_policy",
+    "index.lifecycle.rollover_alias": "datastream"
+  }
+}
+
+```
+# Heap Size
+
+the default heap size is only `1GB`!
+```
+export ES_HEAP_SIZE=10g
+or
+ES_JAVA_OPTS="-Xms10g -Xmx10g" ./bin/elasticsearch
+or
+config/jvm.options
+
+```
+
+# Backup
+
+eidt `/config/elasticsearch.yml`
+
+add `path.repo: ["/path/to/backup"]` below `path.logs: xxxx`
+
+```
+sudo adduser elasticsearch
+
+# add `elasticsearch` user to sudo mod
+sudo usermod -aG sudo elasticsearch
+
+su - elasticsearch
+```
+
+```
+sudo chgrp elasticsearch /path/to/backup
+sudo chmod g+w /path/to/backup
+```
+### backup all index
+```
+PUT /_snapshot/backup-repo 
+{
+  "type": "fs",
+  "settings": {
+    "location": "/Users/yongliu/Documents/software/elasticsearch7/backup"
+  }
+}
+
+PUT /_snapshot/backup-repo/snapshot-1
+
+GET /_snapshot/backup-repo/snapshot-1
+
+```
+## check ealstic search log
+
+fix permission issue when check the elasticsearch log
+
+`cd /var/log/elasticsearch`  --> permission denied
+
+```
+sudo visudo
+
+username ALL=(elasticsearch) NOPASSWD: ALL
+
+sudo -su elasticsearch
+```
+
