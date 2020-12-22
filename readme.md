@@ -3300,5 +3300,3 @@ http://localhost:5601/app/dev_tools#/searchprofiler
 
 
 # Monitor ES - Heartbeat
-
-
