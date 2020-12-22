@@ -467,7 +467,46 @@ PUT /blogs/_mapping
 
 GET /blogs/_mapping
 
+```
+### mappings _template
 
+https://github.com/amliuyong/esNote/blob/master/Kibana_Notes.md
+
+PUT /_template/orders
+```json
+{
+  "index_patterns": ["orders*"],
+  "settings": {
+    "index.mapping.coerce": false
+  }, 
+  "mappings": {
+    "dynamic": false,
+    "properties": {
+      "@timestamp": { "type": "date" },
+      "id": { "type": "keyword" },
+      "product": {
+        "properties": {
+          "id": { "type": "keyword" },
+          "name": { "type": "keyword" },
+          "price": { "type": "float" },
+          "brand": { "type": "keyword" },
+          "category": { "type": "keyword" }
+        }
+      },
+      "customer.id": { "type": "keyword" },
+      "customer.age": { "type": "short" },
+      "customer.gender": { "type": "keyword" },
+      "customer.name": { "type": "keyword" },
+      "customer.email": { "type": "keyword" },
+      "channel": { "type": "keyword" },
+      "store": { "type": "keyword" },
+      "salesman.id": { "type": "keyword" },
+      "salesman.name": { "type": "keyword" },
+      "discount": { "type": "float" },
+      "total": { "type": "float" }
+    }
+  }
+}
 ```
 
 # Analyisis
