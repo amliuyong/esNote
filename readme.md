@@ -14,6 +14,8 @@ http://localhost:5601
 
 `curl -XGET localhost:9200/_cluster/allocation/explain`
 
+`GET /_cat/shards?v`
+
 
 http://localhost:5601/app/dev_tools#/console
 
@@ -3086,5 +3088,60 @@ sudo visudo
 username ALL=(elasticsearch) NOPASSWD: ALL
 
 sudo -su elasticsearch
+```
+
+# Increase/Descrease Shards
+
+```
+POST/{source-index}/_split/{target-index-name}
+
+
+POST/{source-index}/_shrink/{target-index-name}
+
+GET /_cat/shards?v
+
+```
+
+### Increase shards
+```
+PUT example-index/_settings
+{
+  "settings": {
+    "index.blocks.write": true
+  }
+}
+
+
+POST /example-index/_split/example-index-sharded
+{
+  "settings": {
+    "index.number_of_shards": 2
+  }
+}
+
+POST /example-index-sharded/_forcemerge
+
+```
+
+### Descrease Shards
+
+```
+
+PUT example-index-sharded/_settings
+{
+  "settings": {
+    "index.blocks.write": true,
+    "index.routing.allocation.require._name": "node-1"
+  }
+}
+
+
+POST /example-index-sharded/_shrink/example-index_shrink
+{
+   "settings": {
+    "index.number_of_shards": 1
+  }
+}
+
 ```
 
