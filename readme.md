@@ -3231,3 +3231,74 @@ POST /example-index-sharded/_shrink/example-index_shrink
 
 ```
 
+# Rolling restart
+
+ - 1. stop indexing new data if possible
+ - 2. disable shard allocation
+ - 3. shut down one node
+ - 4. perform your maintenance on it and restart, confirm it joins the cluster
+ - 5. re-enable shard allocation
+ - 6. wait for the cluster to return to green status
+ - 7. repeat steps 2 -6 for all other nodes
+ - 8. resume indexing new data
+  
+
+disable shard allocation
+```
+PUT _cluster/settings 
+{
+  "transient": {
+    "cluster.routing.allocation.enable": "none"
+  }
+}
+```
+
+```
+sudo /bin/systemctl stop elasticsearch.service
+```
+
+enable shard allocation
+```
+PUT _cluster/settings 
+{
+  "transient": {
+    "cluster.routing.allocation.enable": "all"
+  }
+}
+```
+
+check cluster status
+```
+GET _cluster/health?pretty
+
+```
+
+
+# Profile
+
+## load data
+```sh
+for f in `ls *.bulk`; do
+
+echo $f 
+curl -H "Content-Type: application/x-ndjson" -XPOST http://localhost:9200/wiki/_bulk --data-binary "@$f" > /dev/null
+
+done
+```
+
+## slowlog
+```
+PUT /wiki/_settings
+{
+   "index.search.slowlog.threshold.query.warn": "10ms",
+   "index.search.slowlog.threshold.fetch.warn": "5ms",
+   "index.search.slowlog.level": "info"
+}
+```
+
+http://localhost:5601/app/dev_tools#/searchprofiler
+
+
+# Monitor ES - Heartbeat
+
+
