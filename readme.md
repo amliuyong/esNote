@@ -3049,6 +3049,8 @@ sudo chmod g+w /path/to/backup
 ```
 ### backup all indices
 ```
+// create backup repository: backup-repo 
+
 PUT /_snapshot/backup-repo 
 {
   "type": "fs",
@@ -3063,7 +3065,7 @@ GET /_snapshot/backup-repo/snapshot-1
 
 GET /_snapshot/backup-repo/snapshot-1/_status
 
-GET /_cat/snapshots/backup-repo
+GET /_cat/snapshots/backup-repo?v
 
 ```
 ### restore 
@@ -3075,6 +3077,88 @@ POST /_snapshot/backup-repo/snapshot-1/_restore
 
 GET _cat/indices?v
 
+
+```
+## backup policy (daily)
+```
+
+PUT /_slm/policy/backup_policy_daily
+{
+  "schedule": "0 03 3 * * ?",
+  "name": "<backup-{now/d}>",
+  "repository": "backup-repo",
+  "config": {
+    "indices": [
+      "*"
+    ]
+  },
+  "retention": {
+    "expire_after": "60d"
+  }
+}
+
+GET /_slm/policy/backup_policy_daily
+
+```
+## exec policy mannully
+```
+POST /_slm/policy/backup_policy_daily/_execute
+
+// output
+{
+  "snapshot_name" : "backup-2020.12.22-hyjjjoj3rwmggenij18u5w"
+}
+
+GET /_snapshot/backup-repo/backup-2020.12.22-hyjjjoj3rwmggenij18u5w
+```
+
+## backup snapshot to S3
+```
+//1.
+bin/elasticsearch-plugin install repository-s3
+
+//2. create IAM user and attach S3FullAccess
+
+//3. add AWS access key to ES
+bin/elasticsearch-keystore add s3.client.default.access_key
+
+//4.
+POST /_nodes/reload_secure_settings
+
+//5. create repo: backup_repository_s3
+
+PUT _snapshot/backup_repository_s3
+{
+  "type": "s3",
+  "settings": {
+    "bucket": "s3bucket_amliuyong"
+  }
+}
+
+GET /_snapshot?pretty
+
+
+//6. set policy
+
+PUT /_slm/policy/backup_policy_daily_s3
+{
+  "schedule": "0 03 3 * * ?",
+  "name": "<backup-{now/d}>",
+  "repository": "backup_repository_s3",
+  "config": {
+    "indices": [
+      "*"
+    ]
+  },
+  "retention": {
+    "expire_after": "60d"
+  }
+}
+
+GET /_slm/policy/backup_policy_daily_s3
+
+//7. _execute policy
+POST /_slm/policy/backup_policy_daily_s3/_execute
 
 ```
 
