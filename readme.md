@@ -3125,7 +3125,7 @@ POST /example-index-sharded/_forcemerge
 
 ```
 
-### Descrease Shards
+### Decrease Shards
 
 ```
 
