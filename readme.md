@@ -3061,6 +3061,8 @@ PUT /_snapshot/backup-repo/snapshot-1
 
 GET /_snapshot/backup-repo/snapshot-1
 
+GET /_snapshot/backup-repo/snapshot-1/_status
+
 GET /_cat/snapshots/backup-repo
 
 ```
