@@ -148,3 +148,70 @@ output:
 }
 ```
 
+## Create transfrom 
+
+PUT _transform/nginx_transform
+```json
+{
+  "source": {
+    "index": "nginx"
+  },
+  "pivot": {
+    "group_by": {
+      "ip": {
+        "terms": {
+          "field": "remote_ip"
+        }
+      }
+    },
+    "aggregations": {
+      "bytes.avg": {
+        "avg": {
+          "field": "bytes"
+        }
+      },
+      "bytes.sum": {
+        "sum": {
+          "field": "bytes"
+        }
+      },
+      "requests.total": {
+        "value_count": {
+          "field": "_id"
+        }
+      },
+      "requests.last": {
+        "scripted_metric": {
+          "init_script": "state.timestamp = 0; state.date = ''",
+          "map_script": "def doc_date  = doc['time'].getValue().toInstant().toEpochMilli(); if (doc_date > state.timestamp){state.timestamp = doc_date;state.date = doc['time'].getValue();}",
+          "combine_script": "return state",
+          "reduce_script": "def date = '';def timestamp = 0L;for (s in states) {if (s.timestamp > (timestamp)){timestamp = s.timestamp; date = s.date;}} return date"
+        }
+      },
+      "requests.first": {
+        "scripted_metric": {
+          "init_script": "state.timestamp = 1609455599000L; state.date = ''",
+          "map_script": "def doc_date = doc['time'].getValue().toInstant().toEpochMilli();if (doc_date < state.timestamp){state.timestamp = doc_date;state.date = doc['time'].getValue();}",
+          "combine_script": "return state",
+          "reduce_script": "def date = '';def timestamp = 0L;for (s in states) {if (s.timestamp > (timestamp)){timestamp = s.timestamp; date = s.date;}} return date"
+        }
+      }
+    }
+  },
+  "description": "Bytes and request dates overview for remote_id",
+  "dest": {
+    "index": "nginx_transformed"
+  }
+}
+```
+
+## Start transform
+```
+POST _transform/nginx_transform/_start
+
+```
+## Check result
+```
+GET /nginx_transformed/_search
+
+```
