@@ -189,9 +189,24 @@ PUT _bulk
 {"delete":{"_index":"blogposts","_id":"2"}}
 ```
 
+```
+awk '{print "\{\"index\":\{\}\}\n" $0}' nginx_json_logs > nginx_json_logs_bulk
+```
+
 # Serach Basics 
 
 ## Find all the documents
+
+`GET _cat/indices/nginx?v`
+
+```
+GET /nginx/_search
+{
+  "size": 0,
+  "track_total_hits": true
+}
+```
+
 
 `GET /blogposts/_search`
 
@@ -213,7 +228,9 @@ http://localhost:9200/blogposts/_search?q=java%20python&pretty
 ### search mult-index:
 
 `GET /blog*/_search`
+
 `GET /index1, index2/_search`
+
 `GET /_search`
 
 
