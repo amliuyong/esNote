@@ -362,13 +362,15 @@ curl -u elastic:$PASSWORD -XGET  -k https://localhost:31920?pretty
 ```
 
 # Final
-
+- all-in-one.yaml
 - 07-4-pvs-for-multi-nodes.yaml
 - 09-multinode-es-with-2-data-nodes.yaml
 - 10-multinode-es-upgrade-to-7.7.0.yaml
 ```
 kubectl delete -f 10-upgrade-four-node-es-cluster.yaml
 kubectl get pods
+
+kubectl apply -f  http://download.elastic.co/downloads/eck/1.1.1/all-in-one.yaml
 
 // create 4 nodes with PV
 kubectl apply -f  07-4-pvs-for-multi-nodes.yaml
