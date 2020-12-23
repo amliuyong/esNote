@@ -135,8 +135,8 @@ kubectl get pods
 
 // kubectl delete secret awsaccesskey
 // kubectl delete secret awssecretkey
-kubectl create secret generic awsaccesskey --from-literal=AWS_ACCESS_KEY_ID=AKIA2N5N6FFOQ44XXKNB
-kubectl create secret generic awssecretkey --from-literal=AWS_SECRET_ACCESS_KEY=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
+kubectl create secret generic awsaccesskey --from-literal=AWS_ACCESS_KEY_ID=xxxxxxxx
+kubectl create secret generic awssecretkey --from-literal=AWS_SECRET_ACCESS_KEY=xxxxxxx
 
 kubectl get secret
 
@@ -365,7 +365,7 @@ curl -u elastic:$PASSWORD -XGET  -k https://localhost:31920?pretty
 
 - 07-4-pvs-for-multi-nodes.yaml
 - 09-multinode-es-with-2-data-nodes.yaml
-- 
+- 10-multinode-es-upgrade-to-7.7.0.yaml
 ```
 kubectl delete -f 10-upgrade-four-node-es-cluster.yaml
 kubectl get pods
