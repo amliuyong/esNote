@@ -1,0 +1,6 @@
+http.cors.enabled: true
+http.cors.allow-origin: "*"
+network.host: 0.0.0.0
+script.engine.groovy.inline.update: true
+script.engine.groovy.inline.aggs: true
+node.name: "node-1"

@@ -3171,7 +3171,7 @@ fix permission issue when check the elasticsearch log
 ```
 sudo visudo
 
-username ALL=(elasticsearch) NOPASSWD: ALL
+yongliu ALL=(elasticsearch) NOPASSWD: ALL
 
 sudo -su elasticsearch
 ```

@@ -1,0 +1,79 @@
+version: "3.4"
+services:
+
+  elasticsearch:
+    build:
+      context: elasticsearch/
+    container_name: elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - node.master=true
+      - node.ml=false
+      - discovery.type=single-node
+      - xpack.ml.enabled=false
+      - cluster.name=docker-elk
+      - bootstrap.memory_lock=true
+      - cluster.remote.connect=false
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+    networks:
+      - esnet
+    ports:
+      - 9200:9200
+      - 9300:9300
+    restart: unless-stopped
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./esdata1:/usr/share/elasticsearch/data:rw
+
+  kibana:
+    build:
+      context: kibana/
+    container_name: kibana
+    environment:
+      - server.host=kibana
+      - server.port=5601
+      - server.name=kibana
+      - server.ssl.enabled=false
+      - kibana.index=.kibana
+      - logging.dest=stdout
+      - logging.silent=false
+      - logging.quiet=true
+      - logging.verbose=false
+      - elasticsearch.preserveHost=true
+      - elasticsearch.startupTimeout=10000
+      - elasticsearch.hosts=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+      - logstash
+    networks:
+      - esnet
+    ports:
+      - 5601:5601
+    restart: unless-stopped
+
+  logstash:
+    build:
+      context: logstash/
+    container_name: logstash
+    environment:
+      - "LS_JAVA_OPTS=-Xmx1g -Xms1g"
+    depends_on:
+      - elasticsearch
+    networks:
+      - esnet
+    ports:
+      - "5044:5044"
+      - "5140:5140/udp"
+      - "5140:5140"
+      - "9600:9600"
+    restart: unless-stopped
+    volumes:
+      - ./logstash/pipelines.yml:/usr/share/logstash/pipelines.yml:ro
+      - ./logstash/pipeline/:/usr/share/logstash/pipeline/:ro
+      - ./logstash/patterns:/usr/share/logstash/patterns:ro
+
+networks:
+  esnet:
