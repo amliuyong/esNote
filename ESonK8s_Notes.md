@@ -400,6 +400,9 @@ kubectl apply -f  10-multinode-es-upgrade-to-7.7.0.yaml
 # Fix Bug
 ```
 kubectl get events
+
+vagrant status
+vagrant reload
 ```
 
 
