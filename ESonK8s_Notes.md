@@ -409,7 +409,7 @@ vagrant reload
 
 
 
-### Install Elastic Stack (EFK) Elastic, FluentD, Kibana
+# Install Elastic Stack (EFK) Elastic, FluentD, Kibana
 
 ##### install elastic search chart 
     helm repo add elastic https://Helm.elastic.co
