@@ -409,54 +409,5 @@ vagrant reload
 
 
 
-# Install Elastic Stack (EFK) Elastic, FluentD, Kibana
-https://gitlab.com/nanuchi/efk-course-commands/-/blob/master/commands.md
-
-##### install elastic search chart 
-    helm repo add elastic https://Helm.elastic.co
-    helm install elasticsearch elastic/elasticsearch -f values-linode.yaml
-
-##### install Kibana chart
-    helm install kibana elastic/kibana
-
-##### access Kibana locally
-    kubectl port-forward deployment/kibana-kibana 5601
-    access: localhost:5601
-
-##### install nginx-ingress controller
-    helm repo add stable https://charts.helm.sh/stable 
-    helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-    helm install nginx-ingress ingress-nginx/ingress-nginx
-
-###### NOTE
-Repo has been deprecated - https://stackoverflow.com/a/57970816    
-    
-    helm repo add stable https://kubernetes-charts.storage.googleapis.com/ 
-
-##### install Fluentd
-    helm repo add bitnami https://charts.bitnami.com/bitnami
-    helm install fluentd bitnami/fluentd
-
-
-### Other useful commands
-
-##### restart Fluentd deamonSet
-    kubectl rollout restart daemonset/fluentd
-
-##### restart elastic search statefulSet
-    kubectl rollout restart statefulset/elasticsearch-master
-
-##### install specific helm version
-    helm install elasticsearch elastic/elasticsearch --version="7.9.0" -f values-linode.yaml
-    helm install kibana elastic/kibana --version="7.9.0"
-    helm install fluentd bitnami/fluentd --version="2.0.1"
-
-    helm install nginx-ingress ingress-nginx/ingress-nginx --version="2.15.0"
-
-##### install helm chart in a specific namespace (namespace must already exist)
-    helm install elasticsearch elastic/elasticsearch -f values-linode.yaml -n elastic
-
-
-
-# ElasticSearch - Fluentd - Kibana - on K8s cluster
+# [EFK] ElasticSearch - Fluentd - Kibana - on K8s cluster
 https://github.com/amliuyong/Logging-in-K8s-EFK
