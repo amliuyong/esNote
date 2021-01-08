@@ -456,3 +456,7 @@ Repo has been deprecated - https://stackoverflow.com/a/57970816
 ##### install helm chart in a specific namespace (namespace must already exist)
     helm install elasticsearch elastic/elasticsearch -f values-linode.yaml -n elastic
 
+
+
+# ElasticSearch - Fluentd - Kibana - on K8s cluster
+https://github.com/amliuyong/Logging-in-K8s-EFK
