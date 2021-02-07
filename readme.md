@@ -578,6 +578,11 @@ GET /blogs/_mapping
 
 ```
 
+## 中文IK analysis plugin
+
+https://github.com/amliuyong/elasticsearch-analysis-ik
+
+
 ## Analyzer processing
 
 Document --> Character Filter  --> Tokenizer  --> Token Filter
@@ -588,6 +593,8 @@ Standard Analyzer:
   - Stop Token Filter
 
 ## Custom analyzer
+
+
 
 ### Custom analyzer - simple example
 
@@ -995,6 +1002,7 @@ output
     }
 }
 ```
+
 
 # Set Search Data
 ```
